@@ -44,7 +44,7 @@ pub struct BPPlayerBundle {
     pub external_impulse: ExternalImpulse,
     pub damping: Damping,
     pub restitution: Restitution,
-    pub mass: AdditionalMassProperties,
+    //pub mass: AdditionalMassProperties,
     pub collision_groups: CollisionGroups,
 
     // Input (The Bundle from Leafwing)
@@ -57,8 +57,8 @@ pub struct BPPlayerBundle {
 }
 
 impl BPPlayerBundle {
-    pub fn new(mut meshes: ResMut<Assets<Mesh>>,
-           mut materials: ResMut<Assets<ColorMaterial>>) -> Self {
+    pub fn new(meshes: &mut ResMut<Assets<Mesh>>,
+               materials: &mut ResMut<Assets<ColorMaterial>>) -> Self {
 
         let input_map = InputMap::default()
             .with_axis(Action::Run, VirtualAxis::new(KeyCode::KeyA, KeyCode::KeyD))
@@ -78,7 +78,7 @@ impl BPPlayerBundle {
             locked_axes: LockedAxes::ROTATION_LOCKED,
             collider: Collider::ball(25.),
             restitution: Restitution::coefficient(0.1),
-            mass: AdditionalMassProperties::Mass(0.1),
+            //mass: AdditionalMassProperties::Mass(0.1),
             external_force: ExternalForce::default(),
             external_impulse: ExternalImpulse::default(),
             damping: player_damping,
@@ -94,10 +94,9 @@ impl BPPlayerBundle {
 fn move_player(mut query: Query<(&ActionState<Action>,
                                  &BPPlayerRunStrength,
                                  &mut ExternalForce), With<BPPlayerMarker>>) {
-    let query_state = query.single_mut();
-    if let Ok(mut query_state) = query_state {
-        if let Some(axis_data) = query_state.0.axis_data(&Action::Run) {
-            query_state.2.force = Vec2::new(axis_data.value * query_state.1.0,0.);
+    for (action_state, run_strength, mut external_force) in &mut query {
+        if let Some(axis_data) = action_state.axis_data(&Action::Run) {
+            external_force.force = Vec2::new(axis_data.value * run_strength.0,0.);
         }
     }
 }
@@ -105,12 +104,11 @@ fn move_player(mut query: Query<(&ActionState<Action>,
 fn jump_player(mut query: Query<(&ActionState<Action>,
                                  &BPPlayerJumpStrength,
                                  &mut ExternalImpulse), With<BPPlayerMarker>>) {
-    let query_state = query.single_mut();
-    if let Ok(mut query_state) = query_state {
-        if !query_state.0.just_pressed(&Action::Jump) {
+    for(action_state, jump_strength, mut external_impulse) in &mut query {
+        if !action_state.just_pressed(&Action::Jump) {
             return;
         }
 
-        query_state.2.impulse = Vec2::new(0.,query_state.1.0);
+        external_impulse.impulse = Vec2::new(0., jump_strength.0);
     }
 }

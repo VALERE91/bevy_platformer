@@ -8,6 +8,7 @@ use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use crate::camera::{BPCameraBundle, BPCameraPlugin};
 use crate::debug::BPDebugPlugin;
+use crate::enemy::{BPEnemyBundle, BPEnemyPlugin};
 use crate::player::{BPPlayerBundle, BPPlayerPlugin};
 
 fn main() {
@@ -17,6 +18,7 @@ fn main() {
         .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0))
         .add_plugins(BPPlayerPlugin)
         .add_plugins(BPCameraPlugin)
+        .add_plugins(BPEnemyPlugin)
         .add_systems(Startup, setup);
 
     if cfg!(debug_assertions) {
@@ -41,8 +43,25 @@ fn setup(mut commands: Commands,
         Collider::cuboid(750., 25.),
         CollisionGroups::new(physic::WORLD_GROUP, physic::WORLD_GROUP | physic::PLAYER_GROUP | physic::PAWN_GROUP),
     ));
+    
+    //Spawn the invisible wall
+    commands.spawn((
+        Transform::from_xyz(700., -150., 0.),
+        Sensor::default(),
+        Collider::cuboid(10., 25.),
+        CollisionGroups::new(physic::INVISIBLE_WALL_GROUP, physic::WORLD_GROUP | physic::PLAYER_GROUP | physic::PAWN_GROUP),
+    ));
 
+    //Spawn the invisible wall
+    commands.spawn((
+        Transform::from_xyz(-700., -150., 0.),
+        Sensor::default(),
+        Collider::cuboid(10., 25.),
+        CollisionGroups::new(physic::INVISIBLE_WALL_GROUP, physic::WORLD_GROUP | physic::PLAYER_GROUP | physic::PAWN_GROUP),
+    ));
+    
     //Spawn the player
-    commands.spawn(BPPlayerBundle::new(meshes, materials));
+    commands.spawn(BPPlayerBundle::new(&mut meshes, &mut materials));
+    commands.spawn(BPEnemyBundle::new(&mut meshes, &mut materials));
 }
 
