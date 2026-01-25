@@ -125,7 +125,7 @@ fn handle_player_collision(mut commands: Commands,
         if let CollisionEvent::Started(e1, e2, _flags) = event {
 
             let mut player : Option<&Entity> = None;
-            let mut enemy : Option<&Entity> = None;;
+            let mut enemy : Option<&Entity> = None;
             if player_query.contains(*e1) && enemy_query.contains(*e2) {
                 player = Some(e1);
                 enemy = Some(e2);
