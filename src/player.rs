@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
+use crate::enemy::BPEnemyMarker;
 use crate::physic::{PAWN_GROUP, PLAYER_GROUP, WORLD_GROUP};
 
 pub struct BPPlayerPlugin;
@@ -9,7 +10,8 @@ impl Plugin for BPPlayerPlugin {
     fn build(&self, app: &mut App) {
         app
             .add_plugins(InputManagerPlugin::<Action>::default())
-            .add_systems(FixedUpdate, (move_player, jump_player));
+            .add_systems(FixedUpdate, (move_player, jump_player))
+            .add_systems(Update, handle_player_collision);
     }
 }
 
@@ -44,8 +46,9 @@ pub struct BPPlayerBundle {
     pub external_impulse: ExternalImpulse,
     pub damping: Damping,
     pub restitution: Restitution,
-    //pub mass: AdditionalMassProperties,
     pub collision_groups: CollisionGroups,
+    pub physic_events: ActiveEvents,
+    pub gravity_scale: GravityScale,
 
     // Input (The Bundle from Leafwing)
     pub input_map: InputMap<Action>,
@@ -69,8 +72,8 @@ impl BPPlayerBundle {
 
         Self {
             marker: BPPlayerMarker {},
-            jump_strength: BPPlayerJumpStrength(1000000.),
-            run_strength: BPPlayerRunStrength(9000000.),
+            jump_strength: BPPlayerJumpStrength(2500000.),
+            run_strength: BPPlayerRunStrength(9500000.),
             mesh: Mesh2d(meshes.add(Circle::new(25.))),
             material: MeshMaterial2d(materials.add(Color::srgb(5.25, 8.4, 8.1))), // RGB values exceed 1 to achieve a bright color for the bloom effect
             transform: Transform::from_xyz(0., 0., 2.),
@@ -78,8 +81,9 @@ impl BPPlayerBundle {
             locked_axes: LockedAxes::ROTATION_LOCKED,
             collider: Collider::ball(25.),
             restitution: Restitution::coefficient(0.1),
-            //mass: AdditionalMassProperties::Mass(0.1),
+            physic_events: ActiveEvents::COLLISION_EVENTS,
             external_force: ExternalForce::default(),
+            gravity_scale: GravityScale(3.0),
             external_impulse: ExternalImpulse::default(),
             damping: player_damping,
             input_map,
@@ -110,5 +114,44 @@ fn jump_player(mut query: Query<(&ActionState<Action>,
         }
 
         external_impulse.impulse = Vec2::new(0., jump_strength.0);
+    }
+}
+
+fn handle_player_collision(mut commands: Commands,
+                           mut collision_events: MessageReader<CollisionEvent>,
+                           enemy_query: Query<&Transform, With<BPEnemyMarker>>,
+                           mut player_query: Query<(&Transform, &mut ExternalImpulse), With<BPPlayerMarker>>,) {
+    for event in collision_events.read() {
+        if let CollisionEvent::Started(e1, e2, _flags) = event {
+
+            let mut player : Option<&Entity> = None;
+            let mut enemy : Option<&Entity> = None;;
+            if player_query.contains(*e1) && enemy_query.contains(*e2) {
+                player = Some(e1);
+                enemy = Some(e2);
+            } else if player_query.contains(*e2) && enemy_query.contains(*e1) {
+                player = Some(e2);
+                enemy = Some(e1);
+            }
+
+            if player.is_none() || enemy.is_none() {
+                return;
+            }
+            let Some(player) = player else { return; };
+            let Some(enemy) = enemy else { return; };
+
+            if let Ok(mut player_query) = player_query.get_mut(*player) {
+                if let Ok(enemy_transform) = enemy_query.get(*enemy) {
+                    if player_query.0.translation.y > enemy_transform.translation.y + 20. {
+                        //Enemy dead
+                        commands.entity(*enemy).despawn();
+                        player_query.1.impulse = Vec2::new(0., 1000000.);
+                    }
+                    else {
+                        commands.entity(*player).despawn();
+                    }
+                }
+            }
+        }
     }
 }
