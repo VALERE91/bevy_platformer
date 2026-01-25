@@ -2,6 +2,7 @@ mod player;
 mod camera;
 mod debug;
 mod enemy;
+mod physic;
 
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
@@ -38,6 +39,7 @@ fn setup(mut commands: Commands,
         Transform::from_xyz(0., -200., 0.),
         RigidBody::Fixed,
         Collider::cuboid(750., 25.),
+        CollisionGroups::new(physic::WORLD_GROUP, physic::WORLD_GROUP | physic::PLAYER_GROUP | physic::PAWN_GROUP),
     ));
 
     //Spawn the player

@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use leafwing_input_manager::prelude::*;
+use crate::physic::{PAWN_GROUP, PLAYER_GROUP, WORLD_GROUP};
 
 pub struct BPPlayerPlugin;
 
@@ -44,6 +45,7 @@ pub struct BPPlayerBundle {
     pub damping: Damping,
     pub restitution: Restitution,
     pub mass: AdditionalMassProperties,
+    pub collision_groups: CollisionGroups,
 
     // Input (The Bundle from Leafwing)
     pub input_map: InputMap<Action>,
@@ -81,6 +83,10 @@ impl BPPlayerBundle {
             external_impulse: ExternalImpulse::default(),
             damping: player_damping,
             input_map,
+            collision_groups: CollisionGroups::new(
+                PLAYER_GROUP,
+                PLAYER_GROUP | WORLD_GROUP | PAWN_GROUP,
+            )
         }
     }
 }
