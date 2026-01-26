@@ -123,7 +123,6 @@ fn handle_player_collision(mut commands: Commands,
                            mut player_query: Query<(&Transform, &mut ExternalImpulse), With<BPPlayerMarker>>,) {
     for event in collision_events.read() {
         if let CollisionEvent::Started(e1, e2, _flags) = event {
-
             let mut player : Option<&Entity> = None;
             let mut enemy : Option<&Entity> = None;
             if player_query.contains(*e1) && enemy_query.contains(*e2) {
@@ -135,7 +134,7 @@ fn handle_player_collision(mut commands: Commands,
             }
 
             if player.is_none() || enemy.is_none() {
-                return;
+                continue;
             }
             let Some(player) = player else { return; };
             let Some(enemy) = enemy else { return; };
