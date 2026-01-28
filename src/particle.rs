@@ -71,7 +71,7 @@ fn spawn_dust_listener(
                 // Use the shared material!
                 MeshMaterial2d(dust_assets.material.clone()),
                 // Scale the TRANSFORM to get the size we want
-                Transform::from_xyz(event.position.x, event.position.y, 0.5)
+                Transform::from_xyz(event.position.x, event.position.y, 3.)
                     .with_scale(Vec3::splat(size)),
             ));
         }
