@@ -42,13 +42,14 @@ fn camera_follow(player_pos: Query<&Transform, With<BPPlayerMarker>>,
                  time: Res<Time>) {
     if let Ok(player_pos) = player_pos.single() {
         if let Ok(mut camera_query) = camera_query.single_mut() {
-            let target = Vec3::new(player_pos.translation.x,
-                                   player_pos.translation.y,
-                                   camera_query.0.translation.z);
-            let cam_pos_2d = Vec2::new(camera_query.0.translation.x, camera_query.0.translation.y);
-            let target_2d = Vec2::new(player_pos.translation.x, player_pos.translation.y);
-            let alpha = cam_pos_2d.distance(target_2d) * camera_query.1.0 * time.delta().as_secs_f32();
-            camera_query.0.translation = camera_query.0.translation.lerp(target, alpha);
+            let target = Vec3::new(
+                player_pos.translation.x,
+                player_pos.translation.y,
+                camera_query.0.translation.z
+            );
+
+            let t = camera_query.1.0 * time.delta().as_secs_f32();
+            camera_query.0.translation = camera_query.0.translation.lerp(target, t);
         }
     }
 }

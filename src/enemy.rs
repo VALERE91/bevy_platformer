@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 use bevy_rapier2d::prelude::*;
 use crate::physic::{INVISIBLE_WALL_GROUP, PAWN_GROUP, PLAYER_GROUP, WORLD_GROUP};
+use crate::utils::BPGameCleanupMarker;
 
 pub struct BPEnemyPlugin;
 
@@ -11,6 +12,7 @@ impl Plugin for BPEnemyPlugin {
 }
 
 #[derive(Component)]
+#[require(BPGameCleanupMarker)]
 pub struct BPEnemyMarker;
 
 #[derive(Component)]
